@@ -15,6 +15,7 @@ boolean signal = true;                                 // Booleana para saber si
 void setup() 
 {
   size(640, 480);
+  noStroke();                                          // Para que el punto rojo de REC no tenga borde.
 
   String[] cameras = Capture.list();
 
@@ -35,12 +36,13 @@ void setup()
 void draw() 
 {
   background(0);
-  cameraStatus();
   
   if(signal){
     CompareImages(cam, prevFrame);
   }
   else noSignal();
+  
+  cameraStatus();
 }
 
 /* 
