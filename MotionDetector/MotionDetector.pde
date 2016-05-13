@@ -2,7 +2,7 @@ import processing.sound.*;
 
 import processing.video.*;
 
-static final float MARGIN_ERROR = 20;                  // Margen de error para saber cuando hay movimiento en la camara.
+static final float MARGIN_ERROR = 40;                  // Margen de error para saber cuando hay movimiento en la camara.
 
 int recTimer = millis();                               // Variable para que la bolita roja del REC aparezca y desaparezca.
 boolean redDot = true;                                 // Booleana para saber si le toca mostrar o no la bolita.
@@ -12,6 +12,8 @@ Capture cam;                                           // Camara.
 PImage prevFrame;                                      // Frame anterior para hacer las comprovaciones.
 
 boolean signal = true;                                 // Booleana para saber si tenemos señal de la camara.
+
+// Variables del audio
 
 boolean alarm = false;
 boolean alarmPlaying = false;
@@ -43,11 +45,13 @@ void draw()
 {
   background(0);
 
+// Funcionamiento del audio, aun no se actualiza para quitar la alarma
   if (alarm && !alarmPlaying) {
       alarmSound.loop();
       alarmPlaying = true;
   }
 
+//Funcionamiento para el señal de la càmara y comparacion de imagenes
   if (signal) {
     CompareImages(cam, prevFrame);
   } else noSignal();
@@ -148,6 +152,7 @@ void CompareImages (Capture camera, PImage prevCamera)
 
   for (int x = 0; x <  cameraLum.length; x++)
   {
+    //Calculo de la mediana de las luminosidades de un grupo de pixeles consecutivos
     float averagePrevLum = 0;
     float averageLum = 0;
     if (x % camera.height != 0 && (x % camera.height) % 3 == 0) {
@@ -158,6 +163,7 @@ void CompareImages (Capture camera, PImage prevCamera)
       averagePrevLum /= 3;
       averageLum /= 3;
     }
+    
     color current = cam.pixels[x];
     if (abs(averagePrevLum - averageLum) >= MARGIN_ERROR)    // Un margen de error en la deteccion del cambio de luminosidad en la imagen
     {
@@ -167,7 +173,7 @@ void CompareImages (Capture camera, PImage prevCamera)
       if (x / camera.width < changed[2]) changed[2] = x / camera.width;
       if (x / camera.width > changed[3]) changed[3] = x / camera.width;
 
-      alarm = true;
+      alarm = true; //Ha detectado un cambio y activa la alarma
 
       //Actualiza el color de los pixeles cuya luminosisad ha variado mas que el margen permitido
       current = (int)cameraLum[x] - (int)prevCameraLum[x];
@@ -206,7 +212,7 @@ float[] Luminosity (Capture camera)
   return luminosity;                                         //Retornamos el array
 }
 
-// OVERLOAD para coger la luminosidad, no solo de capturas, sino tambien de imagenes
+// OVERLOAD para coger la luminosidad, no solo de capturas, sino tambien de imagenes. Funciona exactamente igual
 float[] Luminosity (PImage camera)
 {
   loadPixels();
@@ -227,6 +233,7 @@ float[] Luminosity (PImage camera)
   return luminosity;
 }
 
+//Metodo para usar en el desarrollo para desactivar la alarma
 void keyPressed() {
   if (key == 'f') {
     alarm = false;
