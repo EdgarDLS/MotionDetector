@@ -1,8 +1,8 @@
 Edgar de León
 Miquel Oliver
 
--> Aadir biblioteca -> buscar por "sound" -> "Sound | Sound library based on MethCla for Processing - The Processing Foundation").
--> Aadir biblioteca -> buscar por "video" -> "Video | GStreamer-based video library for Processing - The Processing Foundation").
+-> Añadir biblioteca -> buscar por "sound" -> "Sound | Sound library based on MethCla for Processing - The Processing Foundation").
+-> Añadir biblioteca -> buscar por "video" -> "Video | GStreamer-based video library for Processing - The Processing Foundation").
 
 
 FUNCIONAMIENTO
