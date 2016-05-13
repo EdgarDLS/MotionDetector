@@ -13,7 +13,9 @@ Lo primero que hará será buscar si el ordenador tiene una webcam con la que pode
 En caso de no tenerla mostrará un fondo negro con el mensaje "NO SIGNAL".
 
 Al pasar por delante de la cámara se detectara movimiento y se encuadrara en color rojo el objeto o persona que se haya movido, además
-dejará un pequeño rastro tras suyo durante un instante.
+dejará un pequeño rastro tras suyo durante un instante. Junto a ello, sonará una alarma. 
+
+En una capa superior se podran ver algunos aspectos como el estado de la cámara, la hora y la fecha.
 
 
 CONTROLES
@@ -30,7 +32,7 @@ En la UI se añadirán dos opciones:
 		· Resetear la alarma: si esta estaba sonando ("WARNING"), se podra reanudar, poniendola otra vez en "ONLINE".
 		· Desactivar la alarma: ponerla en modo "OFFLINE".
 		· "Hackear" la alarma: congelar la imagen, haciendo que ya no detecte movimiento y poder pasar por delante sin activarla.
-Los diferentes modos de seguimiento de movimiento, para que el programa sea personalizable, serán el rectángulo que presentamos ya el 
+Los diferentes modos de seguimiento de movimiento, para que el programa sea personalizable, serán el rectángulo del que presentamos ya el 
 primer prototipo, elipses y el rastro.
 
 
