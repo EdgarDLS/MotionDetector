@@ -8,14 +8,33 @@ int recTimer = millis();                               // Variable para que la b
 boolean redDot = true;                                 // Booleana para saber si le toca mostrar o no la bolita.
 String [] monthNames = {"JAN", "FEB" , "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};  // Nombre de los meses que mostrar en el status de DATE de la camara.
 
+
+// CAMARA
 Capture cam;                                           // Camara.
 PImage prevFrame;                                      // Frame anterior para hacer las comprovaciones.
 
+// ESTADOS
 boolean signal = true;                                 // Booleana para saber si tenemos señal de la camara.
 boolean alarm = false;
 boolean alarmPlaying = false;
 
+//SONIDOS
 SoundFile alarmSound;
+
+//ICONOS
+PImage settingsIcon;                                  // Variable donde guardare el icono de opciones.
+PImage consoleIcon;                                   // Variable donde guardare el icono de codigos.
+PImage consolaGrande;
+
+//MENUS
+boolean showConsole = false;
+boolean showOptions = false;
+
+int consoleStartingPosition = 340;
+int consoleAlpha =  0;
+
+ArrayList<String> code = new ArrayList<String>();
+String showValue = "";
 
 void setup() 
 {
@@ -24,6 +43,10 @@ void setup()
 
   String[] cameras = Capture.list();
   alarmSound = new SoundFile(this, "alarm.mp3");
+  
+  settingsIcon = loadImage("icons/settings.png");
+  consoleIcon = loadImage("icons/console.png");
+  consolaGrande = loadImage("icons/consolaGrande.png");
 
   // Si el ordenador no tiene camaras mostrar un mensaje diciendo que no hay camaras disponibles y se cerrara el programa.
   if (cameras.length == 0) {
@@ -53,7 +76,13 @@ void draw()
   }
   else noSignal();
   
+  showConsole();
   cameraStatus();
+  
+  fill(255, 0 ,0);
+  if (mouseX > width/2) textAlign(RIGHT);
+  else textAlign(LEFT);
+  text(mouseX + ", " + mouseY, mouseX, mouseY);
 }
 
 /* 
@@ -71,6 +100,7 @@ void captureEvent(Capture cam)
 // Funcion para que nos muestre el cartelito de "NO SIGNAL" cuando no recibimos señal de ninguna camara.
 void noSignal()
 {
+  fill(255);
   textSize(32);
   textAlign(CENTER);
   text("NO SIGNAL", width/2, height/2);
@@ -136,8 +166,52 @@ void cameraStatus()
   text(calendar, 15, height - 25);
   
   // OPTIONS
+  imageMode(CENTER);
+  image(settingsIcon, width - 30, height - 30, 25, 25);
+  image(consoleIcon, width - 65, height - 30, 25, 25);
   
+  if (showConsole)
+  {
+    textAlign(RIGHT);
+    String digits = "";
+    for(int i = 0; i < code.size(); i++)
+    {   
+      digits += code.get(i);
+      digits += "  ";
+    }
+    
+    text(digits, 369, 155);
+  }
   
+}
+
+void showConsole()
+{
+  if (showConsole)
+  {
+    //fill (192, 192, 192, consoleAlpha);
+    //rectMode(CENTER);
+    //rect(width/2, consoleStartingPosition, 180, 230);
+    tint(255, consoleAlpha);
+    image(consolaGrande, width/2, consoleStartingPosition, 180, 230);
+    
+    if (consoleStartingPosition > height/2)
+    {
+      consoleStartingPosition -= 3;
+      consoleAlpha += 10;
+    }
+  }
+  else if (!showConsole && consoleStartingPosition < 340)
+  {
+    //fill (192, 192, 192, consoleAlpha);
+    //rectMode(CENTER);
+    //rect(width/2, consoleStartingPosition, 180, 230);
+    tint(255, consoleAlpha);
+    image(consolaGrande, width/2, consoleStartingPosition, 180, 230);
+    
+    consoleStartingPosition += 3;
+    consoleAlpha -= 10;
+  }
 }
 
 void CompareImages (Capture camera, PImage prevCamera)
@@ -240,5 +314,92 @@ void keyPressed()
     alarm = false;
     alarmPlaying = false;
     alarmSound.stop();
+  }
+}
+
+void mouseClicked()
+{
+  if (mouseX > 590 && mouseX < 625 && mouseY > 430 && mouseY < 465)
+  {
+    showOptions = !showOptions;
+  }
+  
+  else if (mouseX > 560 && mouseX < 590 && mouseY > 430 && mouseY < 465)
+  {
+    showConsole = !showConsole;
+  }
+  
+  else if (showConsole)
+  {
+    // FIRST ROW
+    if (mouseX > 260 && mouseX < 300 && mouseY > 200 && mouseY < 235)
+    {
+      code.add("7");
+      println(code);
+    }
+    else if (mouseX > 300 && mouseX < 340 && mouseY > 200 && mouseY < 235)
+    {
+      code.add("8");
+      println(code);
+    }
+    else if(mouseX > 340 && mouseX < 380 && mouseY > 200 && mouseY < 235)
+    {
+      code.add("9");
+      println(code);
+    }
+    
+    // SECOND ROW
+    else if (mouseX > 260 && mouseX < 300 && mouseY > 235 && mouseY < 275)
+    {
+      code.add("4");
+      println(code);
+    }
+    else if (mouseX > 300 && mouseX < 340 && mouseY > 235 && mouseY < 275)
+    {
+      code.add("5");
+      println(code);
+    }
+    else if (mouseX > 340 && mouseX < 380 && mouseY > 235 && mouseY < 275)
+    {
+      code.remove(code.size()-1);
+      println(code);
+    }
+    
+    // THIRD ROW
+    else if (mouseX > 260 && mouseX < 300 && mouseY > 275 && mouseY < 310)
+    {
+      code.add("1");
+      println(code);
+    }
+    else if (mouseX > 300 && mouseX < 340 && mouseY > 275 && mouseY < 310)
+    {
+      code.add("2");
+      println(code);
+    }
+    else if (mouseX > 340 && mouseX < 380 && mouseY > 275 && mouseY < 310)
+    {
+      code.add("3");
+      println(code);
+    }
+    
+    checkCode();                  // Comprobamos el codigo que estamos escribiendo para ver si ya tiene 4 digitos y si es correcto.
+  }
+  
+  
+}
+
+void checkCode(){
+  if (code.size() == 4){
+    for(int i = 0; i < code.size(); i++)
+    {   
+      showValue += code.get(i);
+    }
+    
+    if (showValue.equals("7777")) println("CODIGO CORRECTO");
+    else if (showValue.equals("8989"))println("CODIGO CORRECTO"); 
+    else println("INVALID CODE");
+    
+    code.clear();
+    showValue = "";
   }
 }
