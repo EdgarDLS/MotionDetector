@@ -1,4 +1,6 @@
+import processing.sound.*;
 import processing.video.*;
+
 
 static final float MARGIN_ERROR = 15;                  // Margen de error para saber cuando hay movimiento en la camara.
 
@@ -10,7 +12,10 @@ Capture cam;                                           // Camara.
 PImage prevFrame;                                      // Frame anterior para hacer las comprovaciones.
 
 boolean signal = true;                                 // Booleana para saber si tenemos señal de la camara.
+boolean alarm = false;
+boolean alarmPlaying = false;
 
+SoundFile alarmSound;
 
 void setup() 
 {
@@ -18,6 +23,7 @@ void setup()
   noStroke();                                          // Para que el punto rojo de REC no tenga borde.
 
   String[] cameras = Capture.list();
+  alarmSound = new SoundFile(this, "alarm.mp3");
 
   // Si el ordenador no tiene camaras mostrar un mensaje diciendo que no hay camaras disponibles y se cerrara el programa.
   if (cameras.length == 0) {
@@ -36,6 +42,11 @@ void setup()
 void draw() 
 {
   background(0);
+  
+  if (alarm && !alarmPlaying){
+     alarmSound.loop();
+     alarmPlaying = true;
+  }
   
   if(signal){
     CompareImages(cam, prevFrame);
@@ -95,10 +106,14 @@ void cameraStatus()
     fill(0, 200, 0);
     text("ONLINE", width/2, 25);
   }
-  else
+  else if (!signal)
   {
     fill(255, 0, 0);
     text("OFFLINE", width/2, 25);
+  }
+  else if (alarm){
+    fill (255, 0, 0);
+    text("WARNING", width/2, 25);
   }
   
   // TIME
@@ -130,20 +145,49 @@ void CompareImages (Capture camera, PImage prevCamera)
   // Cogemos la luminosidad de la captura y l aimagen a comparar
   float[] cameraLum = Luminosity(camera);
   float[] prevCameraLum = Luminosity(prevCamera);
+  int[] changed = {camera.width, 0, camera.height, 0};                        //Provisional, para dibujar un cuadrado, contiene 4 de las posiciones de los pixeles que cambian para enmarcarlos todos 
+
 
   loadPixels();
   cam.loadPixels();                                  //Actualizaremos la camara directamente.
 
   for (int x = 0; x <  cameraLum.length; x++)
   {
-    color current = cam.pixels[x];
-    if (abs(prevCameraLum[x]-cameraLum[x]) >= MARGIN_ERROR)    // Un margen de error en la deteccion del cambio de luminosidad en la imagen
+    float averagePrevLum = 0;
+    float averageLum = 0;
+    if (x % camera.height != 0 && (x % camera.height) % 3 == 0) 
     {
+      for (int y = 0; y < 3; y++) 
+      {
+        averagePrevLum += prevCameraLum[x - y];
+        averageLum += cameraLum[x - y];
+      }
+      averagePrevLum /= 3;
+      averageLum /= 3;
+    }
+    color current = cam.pixels[x];
+    if (abs(averagePrevLum - averageLum) >= MARGIN_ERROR)    // Un margen de error en la deteccion del cambio de luminosidad en la imagen
+    {
+      //Actualiza los valores de la variable changed segun los pixeles que cambian
+      if (x % camera.width < changed[0]) changed[0] = x % camera.width;
+      if (x % camera.width > changed[1]) changed[1] = x % camera.width;
+      if (x / camera.width < changed[2]) changed[2] = x / camera.width;
+      if (x / camera.width > changed[3]) changed[3] = x / camera.width;
+
+      alarm = true;
+      
+      //Actualiza el color de los pixeles cuya luminosisad ha variado mas que el margen permitido
       current = (int)cameraLum[x] - (int)prevCameraLum[x];
     }
     pixels[x] = current;
   }
   updatePixels();
+
+  //Se dibuja un rectangulo indicando la zona donde hay movimiento
+  noFill();
+  stroke(255, 0, 0);
+  strokeWeight(3);
+  rect(changed[0], changed[2], changed[1] - changed[0], changed[3] - changed[2]);
 }
 
 float[] Luminosity (Capture camera)
@@ -188,4 +232,13 @@ float[] Luminosity (PImage camera)
     }
   } 
   return luminosity;
+}
+
+void keyPressed()
+{
+  if (key == 'f'){
+    alarm = false;
+    alarmPlaying = false;
+    alarmSound.stop();
+  }
 }
