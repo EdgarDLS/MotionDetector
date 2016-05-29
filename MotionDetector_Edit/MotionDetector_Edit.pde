@@ -2,7 +2,7 @@ import processing.sound.*;
 import processing.video.*;
 
 
-static float MARGIN_ERROR = 15;                        // Margen de error para saber cuando hay movimiento en la camara.
+float MARGIN_ERROR = 15;                        // Margen de error para saber cuando hay movimiento en la camara.
 
 int recTimer = millis();                               // Variable para que la bolita roja del REC aparezca y desaparezca.
 boolean redDot = true;                                 // Booleana para saber si le toca mostrar o no la bolita.
@@ -18,15 +18,17 @@ boolean signal = true;                                 // Booleana para saber si
 boolean alarm = false;
 boolean alarmPlaying = false;
 
-//SONIDOS
+// SONIDOS
 SoundFile alarmSound;
+SoundFile beepSound;
+SoundFile quackSound;
 
-//ICONOS
+// ICONOS
 PImage settingsIcon;                                  // Variable donde guardare el icono de opciones.
 PImage consoleIcon;                                   // Variable donde guardare el icono de codigos.
 PImage consolaGrande;
 
-//MENUS
+// MENUS
 boolean showConsole = false;
 boolean showOptions = false;
 
@@ -39,9 +41,13 @@ int detectionBall = 270;
 int lastDetectionBall = 0;
 boolean detectionBar = false;
 boolean squareDetection = true;
+boolean particles = false;
 
 ArrayList<String> code = new ArrayList<String>();
 String showValue = "";
+
+// PARTICLES
+ArrayList<Particles> bubbleParticle = new ArrayList<Particles>();
 
 void setup() 
 {
@@ -49,7 +55,9 @@ void setup()
   noStroke();                                          // Para que el punto rojo de REC no tenga borde.
 
   String[] cameras = Capture.list();
-  alarmSound = new SoundFile(this, "alarm.mp3");
+  alarmSound = new SoundFile(this, "intruder.mp3");
+  beepSound = new SoundFile(this, "beep.mp3");
+  quackSound = new SoundFile(this, "quack.mp3");
   
   settingsIcon = loadImage("icons/settings.png");
   consoleIcon = loadImage("icons/console.png");
@@ -87,10 +95,12 @@ void draw()
   showOptions();
   cameraStatus();
   
+  /*
   fill(255, 0 ,0);
   if (mouseX > width/2) textAlign(RIGHT);
   else textAlign(LEFT);
   text(mouseX + ", " + mouseY, mouseX, mouseY);
+  */
 }
 
 /* 
@@ -188,8 +198,8 @@ void cameraStatus()
       digits += code.get(i);
       digits += "  ";
     }
-    
-    text(digits, 369, 155);
+    textSize(15);
+    text(digits, 369, 160);
   }
   
 }
@@ -247,7 +257,7 @@ void showOptions()
     MARGIN_ERROR = (15 * lastDetectionBall) / 270;
     
     // Como se mostrara la deteccion
-    text ("Cuadrado", width/2 - 130, optionsStartingPosition +35);
+    text ("Cuadrada", width/2 - 130, optionsStartingPosition +35);
     text ("Circular", width/2 - 130, optionsStartingPosition +55);
     
     noFill();
@@ -255,8 +265,16 @@ void showOptions()
     ellipse (width/2 - 55, optionsStartingPosition +50, 11, 11);
     
     fill (0);
-    if (squareDetection) ellipse (width/2 - 55, optionsStartingPosition +30, 5, 5);
-    else ellipse (width/2 - 55, optionsStartingPosition +50, 5, 5);
+    if (squareDetection && !particles) ellipse (width/2 - 55, optionsStartingPosition +30, 5, 5);
+    else if (!squareDetection && !particles) ellipse (width/2 - 55, optionsStartingPosition +50, 5, 5);
+    
+    textAlign(RIGHT);
+    text ("Particulas", width/2 + 130, optionsStartingPosition +35);
+    noFill();
+    ellipse (width/2 + 55, optionsStartingPosition +30, 11, 11);
+    fill (0);
+    if(particles) ellipse (width/2 + 55, optionsStartingPosition +30, 5, 5);
+    else
     
     if (optionsStartingPosition > height/2)
     {
@@ -271,13 +289,32 @@ void showOptions()
     
     fill(0);
     textSize(12);
-    textAlign(RIGHT);
-    text ("Precision de deteccion", width/2, optionsStartingPosition-50); 
+    textAlign(LEFT);
+    text ("Precision de deteccion", width/2 - 130, optionsStartingPosition-50); 
     
     stroke(0, 250);
     strokeWeight(1);
     line(width/2 + 130, optionsStartingPosition-15, width/2 - 130, optionsStartingPosition-15);
     ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
+    
+    text ("Cuadrado", width/2 - 130, optionsStartingPosition +35);
+    text ("Circular", width/2 - 130, optionsStartingPosition +55);
+    
+    noFill();
+    ellipse (width/2 - 55, optionsStartingPosition +30, 11, 11);
+    ellipse (width/2 - 55, optionsStartingPosition +50, 11, 11);
+    
+    fill (0);
+    if (squareDetection && !particles) ellipse (width/2 - 55, optionsStartingPosition +30, 5, 5);
+    else if (!squareDetection && !particles) ellipse (width/2 - 55, optionsStartingPosition +50, 5, 5);
+    
+    textAlign(RIGHT);
+    text ("Particulas", width/2 + 130, optionsStartingPosition +35);
+    noFill();
+    ellipse (width/2 + 55, optionsStartingPosition +30, 11, 11);
+    fill (0);
+    if(particles) ellipse (width/2 + 55, optionsStartingPosition +30, 5, 5);
+    else
     
     optionsStartingPosition += 3;
     optionsAlpha -= 10;
@@ -330,11 +367,35 @@ void CompareImages (Capture camera, PImage prevCamera)
   }
   updatePixels();
 
-  //Se dibuja un rectangulo indicando la zona donde hay movimiento
-  noFill();
-  stroke(255, 0, 0);
-  strokeWeight(3);
-  rect(changed[0], changed[2], changed[1] - changed[0], changed[3] - changed[2]);
+  
+  if (particles)             // Dibujamos unas burbujas como particulas donde hay movimiento
+  {
+    // PODEMOS METERLE UNA CONDICION DE QUE SOLO CREE BURBUJAS CADA X TIEMPO EN LUGAR DE CADA UPDATE
+    // CUANDO LO TENGAMOS PUESTO YA VEREMOS DEPENDIENDO DE COMO QUEDE.
+    bubbleParticle.add(new Particles(1,2));
+    drawBubbles();           // Dibuja las burbujas
+  }
+  else if (squareDetection)  //Se dibuja un rectangulo indicando la zona donde hay movimiento
+  {
+    noFill();
+    stroke(255, 0, 0);
+    strokeWeight(3);
+    rectMode(CORNER);
+    rect(changed[0], changed[2], changed[1] - changed[0], changed[3] - changed[2]);
+  }
+  else if (!squareDetection) //Se dibuja un circulo indicando la zona donde hay movimiento
+  {
+    noFill();
+    stroke(255, 0, 0);
+    strokeWeight(3);
+    ellipseMode(CORNER);
+    float radius;
+    if (changed[1] - changed[0] > changed[3] - changed[2])
+      radius = changed[1] - changed[0];
+    else
+      radius = changed[3] - changed[2];
+    ellipse(changed[0], changed[2], radius, radius);
+  }
 }
 
 float[] Luminosity (Capture camera)
@@ -381,6 +442,14 @@ float[] Luminosity (PImage camera)
   return luminosity;
 }
 
+void drawBubbles()
+{
+  for (int i = 0; i < bubbleParticle.size(); i++)
+  {
+    bubbleParticle.get(i).drawBubbles();
+  }
+}
+
 void keyPressed()
 {
   if (key == 'f'){
@@ -407,77 +476,104 @@ void mouseReleased ()
   detectionBar = false;
 }
 
-void mouseClicked()
+void mousePressed()
 {
   if (mouseX > 590 && mouseX < 625 && mouseY > 430 && mouseY < 465)          // Si estamos entre los pixeles del icono de las opciones
   {
     showOptions = !showOptions;
+    if (showConsole && showOptions) showConsole = false;
   }
   
   else if (mouseX > 560 && mouseX < 590 && mouseY > 430 && mouseY < 465)    // Si estamos entre los pixeles del icono de la consola
   {
-    showConsole = !showConsole;
+    showConsole = !showConsole; 
+    if (showConsole && showOptions) showOptions = false;
   }
   
   else if (showConsole)
   {
     // FIRST ROW
-    if (mouseX > 260 && mouseX < 300 && mouseY > 200 && mouseY < 235)
+    if (code.size() < 5)
     {
-      code.add("7");
-      println(code);
-    }
-    else if (mouseX > 300 && mouseX < 340 && mouseY > 200 && mouseY < 235)
-    {
-      code.add("8");
-      println(code);
-    }
-    else if(mouseX > 340 && mouseX < 380 && mouseY > 200 && mouseY < 235)
-    {
-      code.add("9");
-      println(code);
+      if (mouseX > 260 && mouseX < 300 && mouseY > 200 && mouseY < 235)
+      {
+        code.add("7");
+        beepSound.play();
+        println(code);
+      }
+      else if (mouseX > 300 && mouseX < 340 && mouseY > 200 && mouseY < 235)
+      {
+        code.add("8");
+        beepSound.play();
+        println(code);
+      }
+      else if(mouseX > 340 && mouseX < 380 && mouseY > 200 && mouseY < 235)
+      {
+        code.add("9");
+        beepSound.play();
+        println(code);
+      }
+      
+      // SECOND ROW
+      else if (mouseX > 260 && mouseX < 300 && mouseY > 235 && mouseY < 275)
+      {
+        code.add("4");
+        beepSound.play();
+        println(code);
+      }
+      else if (mouseX > 300 && mouseX < 340 && mouseY > 235 && mouseY < 275)
+      {
+        code.add("5");
+        beepSound.play();
+        println(code);
+      }
+      else if (mouseX > 340 && mouseX < 380 && mouseY > 235 && mouseY < 275)
+      {
+        code.add("6");
+        beepSound.play();
+        println(code);
+      }
+      
+      // THIRD ROW
+      else if (mouseX > 260 && mouseX < 300 && mouseY > 275 && mouseY < 310)
+      {
+        code.add("1");
+        beepSound.play();
+        println(code);
+      }
+      else if (mouseX > 300 && mouseX < 340 && mouseY > 275 && mouseY < 310)
+      {
+        code.add("2");
+        beepSound.play();
+        println(code);
+      }
+      else if (mouseX > 340 && mouseX < 380 && mouseY > 275 && mouseY < 310)
+      {
+        code.add("3");
+        beepSound.play();
+        println(code);
+      }
     }
     
-    // SECOND ROW
-    else if (mouseX > 260 && mouseX < 300 && mouseY > 235 && mouseY < 275)
-    {
-      code.add("4");
-      println(code);
-    }
-    else if (mouseX > 300 && mouseX < 340 && mouseY > 235 && mouseY < 275)
-    {
-      code.add("5");
-      println(code);
-    }
-    else if (mouseX > 340 && mouseX < 380 && mouseY > 235 && mouseY < 275)
+    // FOURTH ROW
+    if (mouseX > 255 && mouseX < 300 && mouseY > 325 && mouseY < 350)
     {
       try{
-        code.remove(code.size()-1);
-      }
-      catch (Exception e){
-        println("There are no digits to delete");
-      }
-      println(code);
+          code.remove(code.size()-1);
+        }
+        catch (Exception e){
+          println("There are no digits to delete");
+        }
+        println(code);
+    }
+    else if (mouseX > 340 && mouseX < 385 && mouseY > 325 && mouseY < 350)
+    {
+      beepSound.play();
+      checkCode();    // Comprobamos el codigo que estamos escribiendo para ver si ya tiene 4 digitos y si es correcto.
     }
     
-    // THIRD ROW
-    else if (mouseX > 260 && mouseX < 300 && mouseY > 275 && mouseY < 310)
-    {
-      code.add("1");
-      println(code);
-    }
-    else if (mouseX > 300 && mouseX < 340 && mouseY > 275 && mouseY < 310)
-    {
-      code.add("2");
-      println(code);
-    }
-    else if (mouseX > 340 && mouseX < 380 && mouseY > 275 && mouseY < 310)
-    {
-      code.add("3");
-      println(code);
-    }
     
-    checkCode();                  // Comprobamos el codigo que estamos escribiendo para ver si ya tiene 4 digitos y si es correcto.
+    
     
     // NECESITO UN BOTON PARA QUE LLAME AL CHECKCODE Y NO QUE LO MIRE CADA VEZ QUE SE PULSA UNO CUALQUIERA
   }
@@ -488,9 +584,13 @@ void mouseClicked()
     {
       squareDetection = true;
     }
-    if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +40 && mouseY < optionsStartingPosition +60)
+    else if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +40 && mouseY < optionsStartingPosition +60)
     {
       squareDetection = false;
+    }
+    else if (mouseX < width/2 + 62 && mouseX > width/2 + 48 && mouseY > optionsStartingPosition +20 && mouseY < optionsStartingPosition +40)
+    {
+      particles = !particles;
     }
   }
   
@@ -498,17 +598,27 @@ void mouseClicked()
 }
 
 void checkCode(){
-  if (code.size() >= 4){
+  if (code.size() >= 4)
+  {
     for(int i = 0; i < code.size(); i++)
     {   
       showValue += code.get(i);
     }
     
-    if (showValue.equals("7777")) println("CODIGO CORRECTO");
-    else if (showValue.equals("8989"))println("CODIGO CORRECTO"); 
+    if (showValue.equals("7777")) signal = false;
+    else if (showValue.equals("8989")) signal = true;
+    else if (showValue.equals("6969")) quackSound.play();
+    else if (showValue.equals("2678")) alarm = true;
+    else if (showValue.equals("3214"))
+    {
+      alarm = false; 
+      alarmSound.stop();
+      alarmPlaying = false;
+    }
     else println("INVALID CODE");
-    
-    code.clear();
-    showValue = "";
   }
+  else println("INVALID CODE");
+  
+  code.clear();
+  showValue = "";
 }
