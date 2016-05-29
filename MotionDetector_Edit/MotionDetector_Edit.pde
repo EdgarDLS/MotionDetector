@@ -2,7 +2,7 @@ import processing.sound.*;
 import processing.video.*;
 
 
-static final float MARGIN_ERROR = 15;                  // Margen de error para saber cuando hay movimiento en la camara.
+static float MARGIN_ERROR = 15;                        // Margen de error para saber cuando hay movimiento en la camara.
 
 int recTimer = millis();                               // Variable para que la bolita roja del REC aparezca y desaparezca.
 boolean redDot = true;                                 // Booleana para saber si le toca mostrar o no la bolita.
@@ -32,6 +32,13 @@ boolean showOptions = false;
 
 int consoleStartingPosition = 340;
 int consoleAlpha =  0;
+
+int optionsStartingPosition = 340;
+int optionsAlpha = 0;
+int detectionBall = 270;
+int lastDetectionBall = 0;
+boolean detectionBar = false;
+boolean squareDetection = true;
 
 ArrayList<String> code = new ArrayList<String>();
 String showValue = "";
@@ -77,6 +84,7 @@ void draw()
   else noSignal();
   
   showConsole();
+  showOptions();
   cameraStatus();
   
   fill(255, 0 ,0);
@@ -167,6 +175,7 @@ void cameraStatus()
   
   // OPTIONS
   imageMode(CENTER);
+  tint(255);
   image(settingsIcon, width - 30, height - 30, 25, 25);
   image(consoleIcon, width - 65, height - 30, 25, 25);
   
@@ -185,13 +194,11 @@ void cameraStatus()
   
 }
 
+// Funcion para mostrar la consola cuando se clicka en ella.
 void showConsole()
 {
   if (showConsole)
   {
-    //fill (192, 192, 192, consoleAlpha);
-    //rectMode(CENTER);
-    //rect(width/2, consoleStartingPosition, 180, 230);
     tint(255, consoleAlpha);
     image(consolaGrande, width/2, consoleStartingPosition, 180, 230);
     
@@ -203,9 +210,6 @@ void showConsole()
   }
   else if (!showConsole && consoleStartingPosition < 340)
   {
-    //fill (192, 192, 192, consoleAlpha);
-    //rectMode(CENTER);
-    //rect(width/2, consoleStartingPosition, 180, 230);
     tint(255, consoleAlpha);
     image(consolaGrande, width/2, consoleStartingPosition, 180, 230);
     
@@ -214,6 +218,75 @@ void showConsole()
   }
 }
 
+// Funcion para mostrar las opciones cuando clickamos en ellas.
+void showOptions()
+{
+  if (showOptions)
+  {
+    rectMode(CENTER);
+    fill (230, optionsAlpha);
+    rect (width/2, optionsStartingPosition, 300, 160, 10);
+    
+    // Barra de precision para detectar movimiento
+    fill(0);
+    textSize(12);
+    textAlign(LEFT);
+    text ("Precision de deteccion", width/2 - 130, optionsStartingPosition-50);
+    
+    stroke(0, 250);
+    strokeWeight(1);
+    line(width/2 - 130, optionsStartingPosition-15, width/2 + 130, optionsStartingPosition-15);
+    
+    if (detectionBall >= width/2 - 130 && detectionBall <= width/2 + 130)    // Para asegurarme que al dibujar la bola no se haya pasado de la linea establecida.
+    {
+      lastDetectionBall = detectionBall;
+    }
+    
+    // Bola que marca el nivel de precision
+    ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
+    MARGIN_ERROR = (15 * lastDetectionBall) / 270;
+    
+    // Como se mostrara la deteccion
+    text ("Cuadrado", width/2 - 130, optionsStartingPosition +35);
+    text ("Circular", width/2 - 130, optionsStartingPosition +55);
+    
+    noFill();
+    ellipse (width/2 - 55, optionsStartingPosition +30, 11, 11);
+    ellipse (width/2 - 55, optionsStartingPosition +50, 11, 11);
+    
+    fill (0);
+    if (squareDetection) ellipse (width/2 - 55, optionsStartingPosition +30, 5, 5);
+    else ellipse (width/2 - 55, optionsStartingPosition +50, 5, 5);
+    
+    if (optionsStartingPosition > height/2)
+    {
+      optionsStartingPosition -= 3;
+      optionsAlpha += 10;
+    }
+  }
+  else if (!showOptions && optionsStartingPosition < 340)
+  {
+    fill (230, optionsAlpha);
+    rect (width/2, optionsStartingPosition, 300, 160, 10);
+    
+    fill(0);
+    textSize(12);
+    textAlign(RIGHT);
+    text ("Precision de deteccion", width/2, optionsStartingPosition-50); 
+    
+    stroke(0, 250);
+    strokeWeight(1);
+    line(width/2 + 130, optionsStartingPosition-15, width/2 - 130, optionsStartingPosition-15);
+    ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
+    
+    optionsStartingPosition += 3;
+    optionsAlpha -= 10;
+  }
+  
+  noStroke();
+}
+
+// Funcion para comparar el frame anterior y el actual y ver si hay diferencias.
 void CompareImages (Capture camera, PImage prevCamera)
 {
   // Cogemos la luminosidad de la captura y l aimagen a comparar
@@ -317,14 +390,31 @@ void keyPressed()
   }
 }
 
+void mouseDragged()
+{
+  line(width/2 - 130, optionsStartingPosition-15, width/2 + 130, optionsStartingPosition-15);
+  
+  if (mouseX > width/2 - 130 && mouseX < width/2 + 130 && mouseY > optionsStartingPosition - 30 && mouseY < optionsStartingPosition)
+  {
+    detectionBar = true;
+  }
+  
+  if (detectionBar) detectionBall = mouseX;
+}
+
+void mouseReleased ()
+{
+  detectionBar = false;
+}
+
 void mouseClicked()
 {
-  if (mouseX > 590 && mouseX < 625 && mouseY > 430 && mouseY < 465)
+  if (mouseX > 590 && mouseX < 625 && mouseY > 430 && mouseY < 465)          // Si estamos entre los pixeles del icono de las opciones
   {
     showOptions = !showOptions;
   }
   
-  else if (mouseX > 560 && mouseX < 590 && mouseY > 430 && mouseY < 465)
+  else if (mouseX > 560 && mouseX < 590 && mouseY > 430 && mouseY < 465)    // Si estamos entre los pixeles del icono de la consola
   {
     showConsole = !showConsole;
   }
@@ -361,7 +451,12 @@ void mouseClicked()
     }
     else if (mouseX > 340 && mouseX < 380 && mouseY > 235 && mouseY < 275)
     {
-      code.remove(code.size()-1);
+      try{
+        code.remove(code.size()-1);
+      }
+      catch (Exception e){
+        println("There are no digits to delete");
+      }
       println(code);
     }
     
@@ -383,13 +478,27 @@ void mouseClicked()
     }
     
     checkCode();                  // Comprobamos el codigo que estamos escribiendo para ver si ya tiene 4 digitos y si es correcto.
+    
+    // NECESITO UN BOTON PARA QUE LLAME AL CHECKCODE Y NO QUE LO MIRE CADA VEZ QUE SE PULSA UNO CUALQUIERA
+  }
+  
+  else if (showOptions)
+  {
+    if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +20 && mouseY < optionsStartingPosition +40)
+    {
+      squareDetection = true;
+    }
+    if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +40 && mouseY < optionsStartingPosition +60)
+    {
+      squareDetection = false;
+    }
   }
   
   
 }
 
 void checkCode(){
-  if (code.size() == 4){
+  if (code.size() >= 4){
     for(int i = 0; i < code.size(); i++)
     {   
       showValue += code.get(i);
