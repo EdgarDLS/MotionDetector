@@ -2,7 +2,7 @@ import processing.sound.*;
 import processing.video.*;
 
 
-float MARGIN_ERROR = 15;                        // Margen de error para saber cuando hay movimiento en la camara.
+float MARGIN_ERROR = 25;                        // Margen de error para saber cuando hay movimiento en la camara.
 
 int recTimer = millis();                               // Variable para que la bolita roja del REC aparezca y desaparezca.
 boolean redDot = true;                                 // Booleana para saber si le toca mostrar o no la bolita.
@@ -27,6 +27,7 @@ SoundFile quackSound;
 PImage settingsIcon;                                  // Variable donde guardare el icono de opciones.
 PImage consoleIcon;                                   // Variable donde guardare el icono de codigos.
 PImage consolaGrande;
+PImage bubbleIcon;
 
 // MENUS
 boolean showConsole = false;
@@ -37,7 +38,7 @@ int consoleAlpha =  0;
 
 int optionsStartingPosition = 340;
 int optionsAlpha = 0;
-int detectionBall = 200;
+int detectionBall = 340;
 int lastDetectionBall = 0;
 boolean detectionBar = false;
 boolean squareDetection = true;
@@ -63,6 +64,7 @@ void setup()
   settingsIcon = loadImage("icons/settings.png");
   consoleIcon = loadImage("icons/console.png");
   consolaGrande = loadImage("icons/consolaGrande.png");
+  bubbleIcon = loadImage("icons/blueBubble.png");
 
   // Si el ordenador no tiene camaras mostrar un mensaje diciendo que no hay camaras disponibles y se cerrara el programa.
   if (cameras.length == 0) {
@@ -261,7 +263,7 @@ void showOptions()
     // Bola que marca el nivel de precision
     ellipseMode(CENTER);
     ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
-    MARGIN_ERROR = (15 * lastDetectionBall) / 200;
+    MARGIN_ERROR = (25 * lastDetectionBall) / 340;
     
     //Valor de la precision
     text (int(MARGIN_ERROR), lastDetectionBall - 8, optionsStartingPosition - 27);
@@ -374,9 +376,10 @@ void CompareImages (Capture camera, PImage prevCamera)
       if (x / camera.width > changed[3]) changed[3] = x / camera.width;
 
       alarm = true;
+      different = true;
       
       //Actualiza el color de los pixeles cuya luminosisad ha variado mas que el margen permitido
-      current = (int)cameraLum[x] - (int)prevCameraLum[x];
+      //current = (int)cameraLum[x] - (int)prevCameraLum[x];
     }
     pixels[x] = current;
   }
@@ -399,7 +402,7 @@ void CompareImages (Capture camera, PImage prevCamera)
     
     // PODEMOS METERLE UNA CONDICION DE QUE SOLO CREE BURBUJAS CADA X TIEMPO EN LUGAR DE CADA UPDATE
     // CUANDO LO TENGAMOS PUESTO YA VEREMOS DEPENDIENDO DE COMO QUEDE.
-    if (millis() - t0 > 300)
+    if (millis() - t0 > 200)
     {
       bubbleParticle.add(new Particles(midPoint[0],midPoint[1]));    // PROBAMOS CON CADA 0.3 segundos añadir una bubruja
       t0 = millis();

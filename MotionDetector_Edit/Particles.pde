@@ -1,6 +1,6 @@
 class Particles
 {
-    float posX;
+  float posX;
   float posY;
   float size;
   float amplitud;
@@ -29,11 +29,12 @@ class Particles
 
   void drawBubbles()
   {
-    fill (255);
+    //fill (255);
     if (posY > 0)
     {
       ParticleMovement();
-      ellipse(posX, posY, size, size);
+      image(bubbleIcon, posX, posY, size, size);
+      //ellipse(posX, posY, size, size);
     }
   }
 
