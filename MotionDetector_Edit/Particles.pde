@@ -41,10 +41,7 @@ class Particles
   {    
     // en vertical
     this.acceleration[1] = -this.empuje;
-<<<<<<< HEAD
     
-=======
->>>>>>> origin/Interface
     //La acceleracion va aumentando hasta llegar a un limite (cuando se igualarian fuerzas de friccion y empuje) en que la velocidad sera constante (a = 0), simulando una burbuja
     if(acceleration[1] < 0) this.acceleration[1] += 0.1;
     this.velocity[1] += acceleration[1] * 0.15;
@@ -52,11 +49,7 @@ class Particles
     
     // ondulaciones horizontales
     
-<<<<<<< HEAD
     //this.acceleration[0] = (-this.angSpeed) *this.amplitud * cos(this.angSpeed * millis());       no s'usa, doncs mitjançant demostracions es modifica directament la posicio i ahorram calculs
-=======
-    //this.acceleration[0] = (-this.angSpeed) * this.amplitud * cos(this.angSpeed * millis());       no s'usa, doncs mitjançant demostracions es modifica directament la posicio i ahorram calculs
->>>>>>> origin/Interface
     //this.velocity[0] = (-this.angSpeed) * this.amplitud * sin(this.angSpeed * millis());           no s'usa, doncs mitjançant demostracions es modifica directament la posicio i ahorram calculs
     this.posX = (this.amplitud * cos(this.angSpeed * millis())) + initPosX;                          // a la posicion que cambia por la ondulacion se le suma la inicial 
   }
