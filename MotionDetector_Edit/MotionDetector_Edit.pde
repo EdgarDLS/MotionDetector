@@ -37,7 +37,7 @@ int consoleAlpha =  0;
 
 int optionsStartingPosition = 340;
 int optionsAlpha = 0;
-int detectionBall = 270;
+int detectionBall = 200;
 int lastDetectionBall = 0;
 boolean detectionBar = false;
 boolean squareDetection = true;
@@ -48,6 +48,7 @@ String showValue = "";
 
 // PARTICLES
 ArrayList<Particles> bubbleParticle = new ArrayList<Particles>();
+int t0;
 
 void setup() 
 {
@@ -87,7 +88,10 @@ void draw()
   }
   
   if(signal){
-    CompareImages(cam, prevFrame);
+    try{
+      CompareImages(cam, prevFrame);
+    } catch (Exception e){
+    }
   }
   else noSignal();
   
@@ -149,19 +153,20 @@ void cameraStatus()
   
   // SIGNAL
   textAlign(CENTER);
-  if (signal)
-  {
-    fill(0, 200, 0);
-    text("ONLINE", width/2, 25);
-  }
-  else if (!signal)
+  if (!signal)
   {
     fill(255, 0, 0);
     text("OFFLINE", width/2, 25);
+    
   }
-  else if (alarm){
+  else if (alarm)
+  {
     fill (255, 0, 0);
     text("WARNING", width/2, 25);
+  }
+  else if (signal){
+    fill(0, 200, 0);
+    text("ONLINE", width/2, 25);
   }
   
   // TIME
@@ -233,6 +238,7 @@ void showOptions()
 {
   if (showOptions)
   {
+    noStroke();
     rectMode(CENTER);
     fill (230, optionsAlpha);
     rect (width/2, optionsStartingPosition, 300, 160, 10);
@@ -241,7 +247,7 @@ void showOptions()
     fill(0);
     textSize(12);
     textAlign(LEFT);
-    text ("Precision de deteccion", width/2 - 130, optionsStartingPosition-50);
+    text ("Margen de deteccion (diferencia entre grises)", width/2 - 130, optionsStartingPosition-50);
     
     stroke(0, 250);
     strokeWeight(1);
@@ -253,8 +259,12 @@ void showOptions()
     }
     
     // Bola que marca el nivel de precision
+    ellipseMode(CENTER);
     ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
-    MARGIN_ERROR = (15 * lastDetectionBall) / 270;
+    MARGIN_ERROR = (15 * lastDetectionBall) / 200;
+    
+    //Valor de la precision
+    text (int(MARGIN_ERROR), lastDetectionBall - 8, optionsStartingPosition - 27);
     
     // Como se mostrara la deteccion
     text ("Cuadrada", width/2 - 130, optionsStartingPosition +35);
@@ -274,7 +284,6 @@ void showOptions()
     ellipse (width/2 + 55, optionsStartingPosition +30, 11, 11);
     fill (0);
     if(particles) ellipse (width/2 + 55, optionsStartingPosition +30, 5, 5);
-    else
     
     if (optionsStartingPosition > height/2)
     {
@@ -284,18 +293,23 @@ void showOptions()
   }
   else if (!showOptions && optionsStartingPosition < 340)
   {
+    noStroke();
+    rectMode(CENTER);
     fill (230, optionsAlpha);
     rect (width/2, optionsStartingPosition, 300, 160, 10);
     
     fill(0);
     textSize(12);
     textAlign(LEFT);
-    text ("Precision de deteccion", width/2 - 130, optionsStartingPosition-50); 
+    text ("Margen de deteccion (diferencia entre grises)", width/2 - 130, optionsStartingPosition-50);
     
     stroke(0, 250);
     strokeWeight(1);
     line(width/2 + 130, optionsStartingPosition-15, width/2 - 130, optionsStartingPosition-15);
+    ellipseMode(CENTER);
     ellipse (lastDetectionBall, optionsStartingPosition-15, 15, 15);
+    
+    text (int(MARGIN_ERROR), lastDetectionBall - 8, optionsStartingPosition - 27);
     
     text ("Cuadrado", width/2 - 130, optionsStartingPosition +35);
     text ("Circular", width/2 - 130, optionsStartingPosition +55);
@@ -314,7 +328,6 @@ void showOptions()
     ellipse (width/2 + 55, optionsStartingPosition +30, 11, 11);
     fill (0);
     if(particles) ellipse (width/2 + 55, optionsStartingPosition +30, 5, 5);
-    else
     
     optionsStartingPosition += 3;
     optionsAlpha -= 10;
@@ -326,10 +339,12 @@ void showOptions()
 // Funcion para comparar el frame anterior y el actual y ver si hay diferencias.
 void CompareImages (Capture camera, PImage prevCamera)
 {
-  // Cogemos la luminosidad de la captura y l aimagen a comparar
+  // Cogemos la luminosidad de la captura y la imagen a comparar
   float[] cameraLum = Luminosity(camera);
   float[] prevCameraLum = Luminosity(prevCamera);
   int[] changed = {camera.width, 0, camera.height, 0};                        //Provisional, para dibujar un cuadrado, contiene 4 de las posiciones de los pixeles que cambian para enmarcarlos todos 
+  float [] midPoint = new float[2];
+  boolean different = false;
 
 
   loadPixels();
@@ -367,12 +382,28 @@ void CompareImages (Capture camera, PImage prevCamera)
   }
   updatePixels();
 
+  if (!different) {
+    changed[0] = 0;
+    changed[1] = 0;
+    changed[2] = 0;
+    changed[3] = 0;
+  }
+
+  midPoint[0] = changed[0] + (changed[1] - changed[0]);  
+  midPoint[1] = changed[2] + (changed[3] - changed[2]);
+
+  println("X: " + midPoint[0] + " | Y: " + midPoint[1]);
   
   if (particles)             // Dibujamos unas burbujas como particulas donde hay movimiento
   {
+    
     // PODEMOS METERLE UNA CONDICION DE QUE SOLO CREE BURBUJAS CADA X TIEMPO EN LUGAR DE CADA UPDATE
     // CUANDO LO TENGAMOS PUESTO YA VEREMOS DEPENDIENDO DE COMO QUEDE.
-    bubbleParticle.add(new Particles(1,2));
+    if (millis() - t0 > 300)
+    {
+      bubbleParticle.add(new Particles(midPoint[0],midPoint[1]));    // PROBAMOS CON CADA 0.3 segundos añadir una bubruja
+      t0 = millis();
+    }
     drawBubbles();           // Dibuja las burbujas
   }
   else if (squareDetection)  //Se dibuja un rectangulo indicando la zona donde hay movimiento
@@ -442,6 +473,7 @@ float[] Luminosity (PImage camera)
   return luminosity;
 }
 
+// Llamaremos a esta funcion cada frame siempre que "particulas" este activada en opciones y dibujaremos las particulas.
 void drawBubbles()
 {
   for (int i = 0; i < bubbleParticle.size(); i++)
@@ -452,11 +484,95 @@ void drawBubbles()
 
 void keyPressed()
 {
-  if (key == 'f'){
-    alarm = false;
-    alarmPlaying = false;
-    alarmSound.stop();
+  if (keyCode == UP)           // Flecha ARRIBA
+  {
+    showConsole = true; 
+    if (showConsole && showOptions) showOptions = false;
   }
+  else if (keyCode == DOWN)    // Flecha ABAJO
+  {
+    showConsole = false; 
+    if (showConsole && showOptions) showOptions = false;
+  }
+  
+  else if (code.size() < 5)
+    {
+      // FIRST ROW
+      if (key == '7')
+      {
+        code.add("7");
+        beepSound.play();
+        println(code);
+      }
+      else if (key == '8')
+      {
+        code.add("8");
+        beepSound.play();
+        println(code);
+      }
+      else if(key == '9')
+      {
+        code.add("9");
+        beepSound.play();
+        println(code);
+      }
+      
+      // SECOND ROW
+      else if (key == '4')
+      {
+        code.add("4");
+        beepSound.play();
+        println(code);
+      }
+      else if (key == '5')
+      {
+        code.add("5");
+        beepSound.play();
+        println(code);
+      }
+      else if (key == '6')
+      {
+        code.add("6");
+        beepSound.play();
+        println(code);
+      }
+      
+      // THIRD ROW
+      else if (key == '1')
+      {
+        code.add("1");
+        beepSound.play();
+        println(code);
+      }
+      else if (key == '2')
+      {
+        code.add("2");
+        beepSound.play();
+        println(code);
+      }
+      else if (key == '3')
+      {
+        code.add("3");
+        beepSound.play();
+        println(code);
+      }
+    }
+    
+    // FOURTH ROW
+    if (key == BACKSPACE)
+    {
+      try{
+          code.remove(code.size()-1);
+        }
+        catch (Exception e){
+        }
+        println(code);
+    }
+    else if (key == ENTER)
+    {
+      beepSound.play();
+      checkCode();    // Comprobamos el codigo que estamos escribiendo para ver si ya tiene 4 digitos y si es correcto.
+    }
 }
 
 void mouseDragged()
@@ -562,7 +678,6 @@ void mousePressed()
           code.remove(code.size()-1);
         }
         catch (Exception e){
-          println("There are no digits to delete");
         }
         println(code);
     }
@@ -583,14 +698,17 @@ void mousePressed()
     if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +20 && mouseY < optionsStartingPosition +40)
     {
       squareDetection = true;
+      particles = false;
     }
     else if (mouseX > width/2 - 62 && mouseX < width/2 - 48 && mouseY > optionsStartingPosition +40 && mouseY < optionsStartingPosition +60)
     {
       squareDetection = false;
+      particles = false;
     }
     else if (mouseX < width/2 + 62 && mouseX > width/2 + 48 && mouseY > optionsStartingPosition +20 && mouseY < optionsStartingPosition +40)
     {
-      particles = !particles;
+      particles = true;
+      t0 = millis();
     }
   }
   
@@ -605,7 +723,13 @@ void checkCode(){
       showValue += code.get(i);
     }
     
-    if (showValue.equals("7777")) signal = false;
+    if (showValue.equals("7777"))
+    {
+      signal = false;
+      alarm = false; 
+      alarmSound.stop();
+      alarmPlaying = false;
+    }
     else if (showValue.equals("8989")) signal = true;
     else if (showValue.equals("6969")) quackSound.play();
     else if (showValue.equals("2678")) alarm = true;
