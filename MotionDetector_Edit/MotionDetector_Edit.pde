@@ -330,7 +330,7 @@ void CompareImages (Capture camera, PImage prevCamera)
   float[] cameraLum = Luminosity(camera);
   float[] prevCameraLum = Luminosity(prevCamera);
   int[] changed = {camera.width, 0, camera.height, 0};                        //Provisional, para dibujar un cuadrado, contiene 4 de las posiciones de los pixeles que cambian para enmarcarlos todos 
-
+  float [] midPoint = new float[2];
 
   loadPixels();
   cam.loadPixels();                                  //Actualizaremos la camara directamente.
@@ -366,7 +366,9 @@ void CompareImages (Capture camera, PImage prevCamera)
     pixels[x] = current;
   }
   updatePixels();
-
+  
+  midPoint[0] = changed[0] + (changed[1] - changed[0]);  
+  midPoint[1] = changed[2] + (changed[3] - changed[2]);
   
   if (particles)             // Dibujamos unas burbujas como particulas donde hay movimiento
   {
