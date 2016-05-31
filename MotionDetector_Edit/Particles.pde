@@ -22,9 +22,9 @@ class Particles
     this.periode = random(500, 750);
     this.angSpeed = 2 * PI / this.periode;
     
-    if (this.amplitud < 3.75) this.empuje = 1.2;
-    else if (this.amplitud >= 3.75 && this.amplitud < 4.5) this.empuje = 1.5;
-    else this.empuje = 1.8;
+    if (this.amplitud < 3.75) this.empuje = 1.5;
+    else if (this.amplitud >= 3.75 && this.amplitud < 4.5) this.empuje = 1.8;
+    else this.empuje = 2.1;
   }
 
   void drawBubbles()
@@ -44,7 +44,7 @@ class Particles
     this.acceleration[1] = -this.empuje;
     
     //La acceleracion va aumentando hasta llegar a un limite (cuando se igualarian fuerzas de friccion y empuje) en que la velocidad sera constante (a = 0), simulando una burbuja
-    if(acceleration[1] < 0) this.acceleration[1] += 0.1;
+    if(acceleration[1] < 0) this.acceleration[1] += 0.3;
     this.velocity[1] += acceleration[1] * 0.15;
     this.posY += this.velocity[1] * 0.15;
     

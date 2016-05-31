@@ -87,7 +87,6 @@ void draw()
   
   if (alarm && !alarmPlaying && alarmON){
      alarmSound.play();
-     alarmSound.loop();
      alarmPlaying = true;
   }
   
@@ -377,7 +376,7 @@ void CompareImages (Capture camera, PImage prevCamera)
       if (x / camera.width < changed[2]) changed[2] = x / camera.width;
       if (x / camera.width > changed[3]) changed[3] = x / camera.width;
 
-      alarm = true;
+      if (alarmON) alarm = true;
       different = true;
       
       //Actualiza el color de los pixeles cuya luminosisad ha variado mas que el margen permitido
@@ -401,7 +400,7 @@ void CompareImages (Capture camera, PImage prevCamera)
   
   if (particles)             // Dibujamos unas burbujas como particulas donde hay movimiento
   {    
-    if (millis() - t0 > 200)
+    if (millis() - t0 > 150)
     {
       bubbleParticle.add(new Particles(midPoint[0],midPoint[1]));    // PROBAMOS CON CADA 0.2 segundos añadir una bubruja
       t0 = millis();
@@ -748,6 +747,7 @@ void checkCode(){
     else if (showValue.equals("5642")) 
     {
       alarmON = false;
+      alarm = false;
       alarmSound.stop();
       alarmPlaying = false; 
     }
