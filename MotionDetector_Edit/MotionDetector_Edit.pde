@@ -17,6 +17,7 @@ PImage prevFrame;                                      // Frame anterior para ha
 boolean signal = true;                                 // Booleana para saber si tenemos señal de la camara.
 boolean alarm = false;
 boolean alarmPlaying = false;
+boolean alarmON = true;
 
 // SONIDOS
 SoundFile alarmSound;
@@ -84,7 +85,8 @@ void draw()
 {
   background(0);
   
-  if (alarm && !alarmPlaying){
+  if (alarm && !alarmPlaying && alarmON){
+     alarmSound.play();
      alarmSound.loop();
      alarmPlaying = true;
   }
@@ -161,7 +163,7 @@ void cameraStatus()
     text("OFFLINE", width/2, 25);
     
   }
-  else if (alarm)
+  else if (alarm && alarmON)
   {
     fill (255, 0, 0);
     text("WARNING", width/2, 25);
@@ -395,16 +397,13 @@ void CompareImages (Capture camera, PImage prevCamera)
   midPoint[0] = changed[0] + (changed[1] - changed[0]);  
   midPoint[1] = changed[2] + (changed[3] - changed[2]);
 
-  println("X: " + midPoint[0] + " | Y: " + midPoint[1]);
+  //println("X: " + midPoint[0] + " | Y: " + midPoint[1]);
   
   if (particles)             // Dibujamos unas burbujas como particulas donde hay movimiento
-  {
-    
-    // PODEMOS METERLE UNA CONDICION DE QUE SOLO CREE BURBUJAS CADA X TIEMPO EN LUGAR DE CADA UPDATE
-    // CUANDO LO TENGAMOS PUESTO YA VEREMOS DEPENDIENDO DE COMO QUEDE.
+  {    
     if (millis() - t0 > 200)
     {
-      bubbleParticle.add(new Particles(midPoint[0],midPoint[1]));    // PROBAMOS CON CADA 0.3 segundos añadir una bubruja
+      bubbleParticle.add(new Particles(midPoint[0],midPoint[1]));    // PROBAMOS CON CADA 0.2 segundos añadir una bubruja
       t0 = millis();
     }
     drawBubbles();           // Dibuja las burbujas
@@ -498,68 +497,71 @@ void keyPressed()
     if (showConsole && showOptions) showOptions = false;
   }
   
-  else if (code.size() < 5)
+  if (showConsole)
+  {
+    if (code.size() < 5)
     {
-      // FIRST ROW
-      if (key == '7')
-      {
-        code.add("7");
-        beepSound.play();
-        println(code);
+        // FIRST ROW
+        if (key == '7')
+        {
+          code.add("7");
+          beepSound.play();
+          println(code);
+        }
+        else if (key == '8')
+        {
+          code.add("8");
+          beepSound.play();
+          println(code);
+        }
+        else if(key == '9')
+        {
+          code.add("9");
+          beepSound.play();
+          println(code);
+        }
+        
+        // SECOND ROW
+        else if (key == '4')
+        {
+          code.add("4");
+          beepSound.play();
+          println(code);
+        }
+        else if (key == '5')
+        {
+          code.add("5");
+          beepSound.play();
+          println(code);
+        }
+        else if (key == '6')
+        {
+          code.add("6");
+          beepSound.play();
+          println(code);
+        }
+        
+        // THIRD ROW
+        else if (key == '1')
+        {
+          code.add("1");
+          beepSound.play();
+          println(code);
+        }
+        else if (key == '2')
+        {
+          code.add("2");
+          beepSound.play();
+          println(code);
+        }
+        else if (key == '3')
+        {
+          code.add("3");
+          beepSound.play();
+          println(code);
+        }
       }
-      else if (key == '8')
-      {
-        code.add("8");
-        beepSound.play();
-        println(code);
-      }
-      else if(key == '9')
-      {
-        code.add("9");
-        beepSound.play();
-        println(code);
-      }
-      
-      // SECOND ROW
-      else if (key == '4')
-      {
-        code.add("4");
-        beepSound.play();
-        println(code);
-      }
-      else if (key == '5')
-      {
-        code.add("5");
-        beepSound.play();
-        println(code);
-      }
-      else if (key == '6')
-      {
-        code.add("6");
-        beepSound.play();
-        println(code);
-      }
-      
-      // THIRD ROW
-      else if (key == '1')
-      {
-        code.add("1");
-        beepSound.play();
-        println(code);
-      }
-      else if (key == '2')
-      {
-        code.add("2");
-        beepSound.play();
-        println(code);
-      }
-      else if (key == '3')
-      {
-        code.add("3");
-        beepSound.play();
-        println(code);
-      }
-    }
+  }
     
     // FOURTH ROW
     if (key == BACKSPACE)
@@ -734,13 +736,20 @@ void checkCode(){
       alarmPlaying = false;
     }
     else if (showValue.equals("8989")) signal = true;
-    else if (showValue.equals("6969")) quackSound.play();
+    else if (showValue.equals("4826")) quackSound.play();
     else if (showValue.equals("2678")) alarm = true;
     else if (showValue.equals("3214"))
     {
       alarm = false; 
       alarmSound.stop();
       alarmPlaying = false;
+    }
+    else if (showValue.equals("9935")) alarmON = true;
+    else if (showValue.equals("5642")) 
+    {
+      alarmON = false;
+      alarmSound.stop();
+      alarmPlaying = false; 
     }
     else println("INVALID CODE");
   }
