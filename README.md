@@ -12,7 +12,7 @@ Al iniciar el programa en Processing se abrirá una ventana 640x480.
 Lo primero que hará será buscar si el ordenador tiene una webcam con la que poder hacer uso del programa. 
 En caso de no tenerla mostrará un fondo negro con el mensaje "NO SIGNAL".
 
-Al pasar por delante de la cámara se detectara movimiento y se encuadrara en color rojo el objeto o persona que se haya movido. 
+Al pasar por delante de la cámara se detectará movimiento y se encuadrara en color rojo el objeto o persona que se haya movido. 
 Junto a ello, sonará una alarma. 
 
 En una capa superior se podran ver algunos aspectos como el estado de la cámara, la hora y la fecha.
